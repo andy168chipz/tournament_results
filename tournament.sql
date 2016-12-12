@@ -6,8 +6,11 @@
 -- You can write comments in this file by starting them with two dashes, like
 -- these lines here.
 
+CREATE DATABASE tournament;
 
-create table player (id SERIAL PRIMARY KEY, name TEXT);
+\connect tournament;
+
+CREATE TABLE player (id SERIAL PRIMARY KEY, name TEXT);
 
 CREATE TABLE matches(id SERIAL PRIMARY KEY, winner INT, loser INT);
 
