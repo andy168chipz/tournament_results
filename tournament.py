@@ -7,9 +7,14 @@ import psycopg2
 import bleach
 
 
-def connect():
+def connect(database_name="tournament"):
     """Connect to the PostgreSQL database.  Returns a database connection."""
-    return psycopg2.connect("dbname=tournament")
+    try:
+        db = psycopg2.connect("dbname={}".format(database_name))
+        cursor = db.cursor()
+        return db, cursor
+    except:
+        print("<Error: Can't connect to database>")
 
 
 def disconnect(db):
@@ -20,24 +25,21 @@ def disconnect(db):
 
 def deleteMatches():
     """Remove all the match records from the database."""
-    db = connect()
-    c = db.cursor()
+    db, c = connect()
     c.execute("DELETE  FROM matches")
     disconnect(db)
 
 
 def deletePlayers():
     """Remove all the player records from the database."""
-    db = connect()
-    c = db.cursor()
+    db, c = connect()
     c.execute("DELETE FROM player")
     disconnect(db)
 
 
 def countPlayers():
     """Returns the number of players currently registered."""
-    db = connect()
-    c = db.cursor()
+    db, c = connect()
     c.execute("SELECT count(name) as num FROM player")
     count = c.fetchone()
     db.close()
@@ -54,8 +56,7 @@ def registerPlayer(name):
       name: the player's full name (need not be unique).
     """
     name = bleach.clean(name)
-    db = connect()
-    c = db.cursor()
+    db, c = connect()
     c.execute("INSERT INTO player (name) values(%s)", (name,))
     disconnect(db)
 
@@ -63,8 +64,8 @@ def registerPlayer(name):
 def playerStandings():
     """Returns a list of the players and their win records, sorted by wins.
 
-    The first entry in the list should be the player in first place, or a player
-    tied for first place if there is currently a tie.
+    The first entry in the list should be the player in first place,
+    or a player tied for first place if there is currently a tie.
 
     Returns:
       A list of tuples, each of which contains (id, name, wins, matches):
@@ -73,11 +74,10 @@ def playerStandings():
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
-    db = connect()
-    c = db.cursor()
-    # c.execute("SELECT player.id, player.name, count(matches")
-    c.execute(
-        "SELECT wins.id, name, win, matches FROM wins LEFT JOIN total on wins.id = total.id")
+    db, c = connect()
+    query = 'SELECT wins.id, name, win, matches '\
+        'FROM wins LEFT JOIN total on wins.id=total.id'
+    c.execute(query)
     result = c.fetchall()
     disconnect(db)
     return result
@@ -91,8 +91,7 @@ def reportMatch(winner, loser):
       loser:  the id number of the player who lost
     """
     winner, loser = bleach.clean(winner), bleach.clean(loser)
-    db = connect()
-    c = db.cursor()
+    db, c = connect()
     c.execute("INSERT INTO matches (winner, loser) VALUES (%s, %s)",
               (winner, loser))
     disconnect(db)

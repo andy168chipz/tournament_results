@@ -6,13 +6,14 @@
 -- You can write comments in this file by starting them with two dashes, like
 -- these lines here.
 
+DROP DATABASE IF EXISTS tournament;
 CREATE DATABASE tournament;
 
 \connect tournament;
 
 CREATE TABLE player (id SERIAL PRIMARY KEY, name TEXT);
 
-CREATE TABLE matches(id SERIAL PRIMARY KEY, winner INT, loser INT);
+CREATE TABLE matches(id SERIAL PRIMARY KEY, winner INT REFERENCES player(id), loser INT  REFERENCES player(id));
 
 CREATE VIEW wins AS SELECT player.id, player.name, count(matches.winner) as win FROM player LEFT JOIN matches ON player.id = matches.winner
 GROUP BY player.id ORDER BY win DESC;
